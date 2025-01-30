@@ -2,28 +2,67 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Leer Excel de OneDrive</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <title>Modificar Excel en GitHub</title>
 </head>
 <body>
-    <h1>Número desde Excel</h1>
-    <p id="numero">Cargando...</p>
+    <h1>Modificar Excel en GitHub</h1>
+    <input type="number" id="numero" placeholder="Ingrese un número">
+    <button onclick="modificarExcel()">Guardar en Excel</button>
 
     <script>
-        async function cargarNumero() {
-            const url = "https://1drv.ms/x/c/28432700125b63cb/ETWQw4A87MxBn4lo82xT3KQBF2f9W3IQslMklj_f7B9i1Q?e=1CV1O3"; // Reemplaza con tu enlace de OneDrive
-
-            const response = await fetch(url);
-            const arrayBuffer = await response.arrayBuffer();
-            const workbook = XLSX.read(new Uint8Array(arrayBuffer), { type: "array" });
-
-            const sheet = workbook.Sheets[workbook.SheetNames[0]];
-            const cellValue = sheet["A1"] ? sheet["A1"].v : "No encontrado";
+        async function modificarExcel() {
+            const token = "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"; // Reemplaza con tu nuevo token
+            const repo = "https://github.com/Alexisgr93/Tareas-del-personal"; // Nombre de tu repositorio
+            const owner = "https://github.com/Alexisgr93"; // Tu usuario de GitHub
+            const filePath = "https://github.com/Alexisgr93/Tareas-del-personal/blob/main/prueba.xlsx"; // Ruta del archivo en el repositorio
+            const branch = "main"; // Rama de GitHub donde está el archivo
+            const numero = document.getElementById("numero").value;
             
-            document.getElementById("numero").textContent = cellValue;
-        }
+            // Obtén el archivo Excel de GitHub
+            const fileUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
+            
+            const response = await fetch(fileUrl, {
+                headers: {
+                    "Authorization": `token ${token}`,
+                    "Accept": "application/vnd.github.v3.raw",
+                },
+            });
 
-        cargarNumero();
+            const fileContent = await response.json();
+            const content = atob(fileContent.content); // Decodificar base64
+
+            // Aquí deberías realizar el proceso de modificación en el archivo Excel.
+            // Esto podría implicar usar una librería como xlsx.js para modificar el archivo.
+
+            // Para este ejemplo, vamos a suponer que ya modificamos el archivo localmente
+            const modifiedContent = content; // Tu archivo modificado en base64
+
+            // Subir el archivo modificado de vuelta a GitHub
+            const commitMessage = "Actualización del archivo Excel";
+            const data = {
+                message: commitMessage,
+                content: btoa(modifiedContent), // Subir en base64
+                sha: fileContent.sha, // Necesario para actualizar el archivo existente
+                branch: branch,
+            };
+
+            const updateResponse = await fetch(fileUrl, {
+                method: "PUT",
+                headers: {
+                    "Authorization": `token ${token}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(data),
+            });
+
+            const updateData = await updateResponse.json();
+            if (updateData.content) {
+                alert("El archivo se ha actualizado correctamente.");
+            } else {
+                alert("Hubo un error al actualizar el archivo.");
+            }
+        }
     </script>
 </body>
 </html>
+
